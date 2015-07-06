@@ -1,0 +1,218 @@
+// globals
+var _SE_BASE 	= 	"http://streeteasy.com/nyc/api/rentals/search";
+var _SE_PARAMS 	= 	{
+	criteria: "&criteria=rental_type:frbo,brokernofee,brokerfee|price:1750-2152|area:115,158,116,108,162,107,157,306,322,323,305|beds:=1|sort_by:listed_desc|",
+	limit: 50,
+	format: "json",
+	key: "0523e568930021b573ca6e1e1089327b61ad56e9"
+}
+var _USER_EXISTING_LISTINGS = [];
+var _SAVE_OBJS = [];
+// testing data (overridden when the function is called via the job)
+var userId = "eFatJhDAvB";
+var inquiryId = "JGn1ubwaff";
+
+// helpers
+var indexOf=function(n){return indexOf="function"==typeof Array.prototype.indexOf?Array.prototype.indexOf:function(n){var r=-1,t=-1;for(r=0;r<this.length;r++)if(this[r]===n){t=r;break}return t},indexOf.call(this,n)};
+
+// main function, fetch listings for specified user and criteria
+var fetchListingsForUserQuery = function(request, response){
+
+	var saveObjects = [];
+	
+	// change the parameters here based on userInquiry
+	if ( request ){
+		if ( request.criteria ){
+			_SE_PARAMS.criteria = request.criteria;
+		}
+		if ( request.userId ){
+			userId = request.userId;
+		}
+		if ( request.inquiryId ){
+			inquiryId = request.inquiryId;
+		}
+	}
+	
+	console.log('--x--');
+	console.log('begin fetch for -> ' + userId);
+	
+	// first let's figure out what listings the user has already seen
+	var query = new Parse.Query("UserInquiryListing");
+	query.equalTo("userId", userId);
+	query.find().then(
+		
+		function(results)                              
+		{
+			console.log('query success userInquiryListing');
+			if (results.length > 0)
+			{                            
+				for ( var i=0; i<results.length; i++){
+					if ( results[i] ){
+						obj = results[i];
+						tempListingId = obj.get("listingId");
+						_USER_EXISTING_LISTINGS[_USER_EXISTING_LISTINGS.length] = tempListingId;
+					}
+				}
+				console.log('ok, temp stored all of user listings');
+			}                 
+			else    
+			{                 
+				console.log('note this user does not yet have any listings stored');
+			}
+			return Parse.Promise.as(_USER_EXISTING_LISTINGS);
+		}
+		
+		// !! remove these if u have to 
+		
+		/*, function(error){
+			console.log('querying on this userId in the InquiryListing table failed. Reporting error ->');
+			console.log(error);
+			return Parse.Promise.as(_USER_EXISTING_LISTINGS);
+		}*/ 
+		
+	// with this list, now let's get the new listings.
+	).then(
+		function(userExistingListings){
+			console.log('making http request');
+			return Parse.Cloud.httpRequest({
+				url: _SE_BASE,
+				params: _SE_PARAMS,
+				method: "GET"
+			});
+			
+		}/*, function(userExistingListings){
+			console.log('returning an object with an empty listings array');
+			return Parse.Promise.as({listings:[]});
+		}*/
+	// we finally sorted this out, now let's save
+	).then(
+		function(httpResponse){
+			console.log('http success handler');
+			jResponse = JSON.parse(httpResponse.text);
+			
+			if ( jResponse ){
+				// console.log(jResponse);
+				// we can easily exclude records we already got, and write them to parse
+				if ( jResponse.listings ){
+					listingsArray = jResponse.listings;
+					if ( listingsArray.length > 0 ){
+						// console.log('listingsArray!');
+						for (var i=0; i<listingsArray.length; i++){
+							if ( listingsArray[i] ){
+								obj = listingsArray[i];
+								// console.log(obj);
+								if ( indexOf.call(_USER_EXISTING_LISTINGS, obj.id+"") == -1 ){
+									var newListing = new Parse.Object("UserInquiryListing");
+									/*newListing.save().then(function(a) {	  
+										response.success('returning response here works fine.');
+										});*/    
+										
+										listingId = obj.id+'';
+										listingPrice = obj.price+'';
+										listingTitle = obj.clean_title;
+										listingUrl = obj.url+'';
+										
+										newListing.set("title", listingTitle);
+										newListing.set("price", listingPrice);
+										newListing.set("userId", userId);
+										newListing.set("listingId", listingId);
+										newListing.set("inquiryId", inquiryId);
+										newListing.set("url", listingUrl);
+										// we are testing.
+											
+										_SAVE_OBJS[_SAVE_OBJS.length] = newListing;
+									}
+								}
+							}
+							
+							console.log('saveAll');
+							return Parse.Object.saveAll(_SAVE_OBJS);
+						
+						}						
+					}
+			}
+		}).then(
+			function(a){
+				// done
+				console.log('Success saving new listings');
+				//status.success("Successfully saved new listings");
+				response.success(a);
+				console.log('attempting to return promise');
+				return Parse.Promise.as(a);
+				// return Parse.Promise.as(); // what is this?
+			
+			}, function(error) {
+				console.log('last error');
+				console.log(error);
+				return Parse.Promise.as(error);
+				response.error(error);
+				// return Parse.Promise.error("Failed somewhere in the main.");
+			}
+		);
+	
+	// note that we get here immediately when the function is called.
+
+	// call function to handle notifications for new properties available for user
+	
+};
+
+// fetchApartmentsForQuery. 
+Parse.Cloud.define("fetchListingsForUserQuery", function(request, response){
+	return fetchListingsForUserQuery(request,response);
+});
+
+// setup job to run that finds listings for all queries
+Parse.Cloud.job("fetchListingsForAllUsers", function(request, status) {
+  // Set up to modify user data
+  var counter = 0;
+  var promise = new Parse.Promise();
+  console.log('starting job');
+  
+  // Query for all inquiries
+  var query = new Parse.Query("UserInquiry"); 
+  query.each(function(inquiry) {
+
+	  var request = {};
+	  
+	  if ( inquiry.length == 0 ){
+		  promise.resolve(inquiry);
+	  } else {
+		  if ( inquiry ){
+			  request.userId = inquiry.get("userId");
+			  request.criteria = inquiry.get("InquiryParameters");
+			  request.inquiryId = inquiry.id;
+		  }
+		  
+		  fetchListingsForUserQuery(request,null).then(
+			  function(result){
+			      console.log('resolving promise');
+				  promise.resolve(result);
+			  },
+			  function(error){
+				  console.log('promise error');
+				  promise.reject(error);
+			  }
+		  );
+		  
+	  }
+	  
+	  return promise;	  
+
+	  // fetchListingsForUserQuery(request,null); // So, this is working, but we're not calling success on the job.
+
+  }).then(function(request) {
+	  
+    // Set the job's success status
+    status.success("Successfully looped through all users, and called listing fetch");
+  }, function(error) {
+    // Set the job's error status
+    status.error("Uh oh, something went wrong with the query.");
+  });
+});
+
+/* 
+
+mailGun
+key-ef6f2ffb1718bfeb99f84a0dbb6b71e6
+
+*/

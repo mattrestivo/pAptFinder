@@ -1,0 +1,170 @@
+// globals
+var _SE_BASE 	= 	"http://streeteasy.com/nyc/api/rentals/search";
+var _SE_PARAMS 	= 	{
+	criteria: "&criteria=rental_type:frbo,brokernofee,brokerfee|price:1750-2451|area:115,158,116,108,162,107,157,306,322,323,305|beds:=1|sort_by:listed_desc|",
+	limit: 50,
+	format: "json",
+	key: "0523e568930021b573ca6e1e1089327b61ad56e9"
+}
+var _USER_EXISTING_LISTINGS = [];
+var _SAVE_OBJS = [];
+
+// helpers
+var indexOf=function(n){return indexOf="function"==typeof Array.prototype.indexOf?Array.prototype.indexOf:function(n){var r=-1,t=-1;for(r=0;r<this.length;r++)if(this[r]===n){t=r;break}return t},indexOf.call(this,n)};
+
+// main function, fetch listings for specified user and criteria
+var fetchListingsForUserQuery = function(request, response){
+
+	
+							
+	// call function to handle notifications for new properties available for user
+		
+};
+
+// fetchApartmentsForQuery
+Parse.Cloud.define("fetchListingsForUserQuery", function(request, response){
+	fetchListingsForUserQuery(request,response); 
+});
+
+// setup job to run that finds listings for all queries
+Parse.Cloud.job("fetchListingsForAllUsers", function(request, status) {
+  // Set up to modify user data
+  var counter = 0;
+  
+  // Query for all inquiries
+  var query = new Parse.Query("UserInquiry");
+  query.each(function(inquiry) {
+	  
+	  var request = {};
+	  
+	  if ( inquiry ){
+		  request.userId = inquiry.get("userId");
+		  request.criteria = inquiry.get("InquiryParameters");
+	  } else {
+		  return "Error";
+	  }
+	  
+      // Update to plan value passed in
+      if (counter % 100 === 0) {
+        // Set the  job's progress status
+        status.message(counter + " users processed.");
+      }
+      counter += 1;
+
+  	console.log("Entered Fetch Listings");
+
+  	var userId = "eFatJhDAvB";
+  	var saveObjects = [];
+	
+  	// change the parameters here based on userInquiry
+  	if ( request ){
+  		if ( request.criteria ){
+  			_SE_PARAMS.criteria = request.criteria;
+  		}
+  		if ( request.userId ){
+  			userId = request.userId;
+  		}
+  	}
+	
+  	console.log('proccessed params');
+	console.log(request);
+	
+  	// first let's figure out what listings the user has already seen
+  	var query = new Parse.Query("UserInquiryListing");
+  	query.equalTo("userId", userId);	
+	console.log('created query');
+  	query.find().then(
+		
+  		function(results)                              
+  		{             
+  			console.log('query'); 
+  			if (results.length > 0)
+  			{                            
+  				for ( var i=0; i<results.length; i++){
+  					if ( results[i] ){
+  						obj = results[i];
+  						tempListingId = obj.get("listingId");
+  						_USER_EXISTING_LISTINGS[_USER_EXISTING_LISTINGS.length] = tempListingId;
+  					}
+  				}
+  				//console.log('ok, seemed to process all of user listings');
+  				return Parse.Promise.as(_USER_EXISTING_LISTINGS);
+  			}                 
+  			else    
+  			{                 
+  				return Parse.Promise.error("An error message.");
+  			}
+  		}
+		
+  	// with this list, now let's get the new listings.
+  	).then(function(userExistingListings){
+		
+  		console.log('http');
+		
+  		return Parse.Cloud.httpRequest({
+  			url: _SE_BASE,
+  			params: _SE_PARAMS,
+  			method: "GET"
+  		});
+		
+  	// we finally sorted this out, now let's save
+  	}).then(
+  		function(httpResponse){
+  			console.log('http request success handler');
+  			jResponse = JSON.parse(httpResponse.text);
+			
+  			if ( jResponse ){
+  				// console.log(jResponse);
+  				// we can easily exclude records we already got, and write them to parse
+  				if ( jResponse.listings ){
+  					listingsArray = jResponse.listings;
+  					if ( listingsArray.length > 0 ){
+  						// console.log('listingsArray!');
+  						for (var i=0; i<listingsArray.length; i++){
+  							if ( listingsArray[i] ){
+  								obj = listingsArray[i];
+  								// console.log(obj);
+  								if ( indexOf.call(_USER_EXISTING_LISTINGS, obj.id+"") == -1 ){
+  									var newListing = new Parse.Object("UserInquiryListing");
+  									/*newListing.save().then(function(a) {	  
+  										response.success('returning response here works fine.');
+  										});*/    
+										
+  										listingId = obj.id+'';
+  										price = obj.price+'';
+  										title = obj.clean_title;
+										
+  										newListing.set("title", title);
+  										newListing.set("price", price);
+  										newListing.set("userId", userId);
+  										newListing.set("listingId", listingId);
+											
+  										_SAVE_OBJS[_SAVE_OBJS.length] = newListing;
+  									}
+  								}
+  							}
+							
+  							console.log('lets move in with the following to get saved ->');
+  							return Parse.Object.saveAll(_SAVE_OBJS);
+							
+						
+  						}						
+  					}
+  			}
+  		}).then(function(a){
+  		// done
+			status.success("Successfully looped through all users, and called listing fetch");
+  			console.log('doneski');
+  			//response.success(a);
+  	}, function(error) {
+  		//response.error(error); 
+  	});
+
+  }).then(function() {
+    // Set the job's success status
+    // status.success("Successfully looped through all users, and called listing fetch");
+  }, function(error) {
+    // Set the job's error status
+    // status.error("Uh oh, something went wrong.");
+  });
+});

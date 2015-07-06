@@ -1,0 +1,14 @@
+{
+  "global": {
+    "parseVersion": "1.4.0"
+  },
+  "applications": {
+    "Matt's Test App": {
+      "applicationId": "qaxPUYOQKh2qoynbAJpC41UWEU3AHJCLZCI2TJ9t",
+      "masterKey": "p7INvQ03y55rHQucjzx4dc9jNgdW4HdNMRBu5dnJ"
+    },
+    "_default": {
+      "link": "Matt's Test App"
+    }
+  }
+}
