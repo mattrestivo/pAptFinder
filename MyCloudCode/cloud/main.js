@@ -11,7 +11,7 @@ var _USER_DESTROY_LISTINGS = [];
 var _SAVE_OBJS = [];
 var LISTINGS_VALID_TTL = 604800000;
 // testing data (overridden when the function is called via the job)
-var userId = "mattrestivo";
+var userId = "mattrestivo"; // depricating.
 var inquiryId = "JGn1ubwaff";
 
 // helpers
@@ -31,8 +31,11 @@ var fetchListingsForUserQuery = function(request, response){
 		if ( request.criteria ){
 			_SE_PARAMS.criteria = request.criteria;
 		}
-		if ( request.userId ){
+		if ( request.userId ){ // depricate
 			userId = request.userId;
+		}
+		if ( request.user ){
+			user = request.user;
 		}
 		if ( request.inquiryId ){
 			inquiryId = request.inquiryId;
@@ -40,11 +43,16 @@ var fetchListingsForUserQuery = function(request, response){
 	}
 	
 	console.log('>> fetchListingsForUserQuery >>>');
-	console.log(userId + ', ' + inquiryId);
+	console.log(userId + ' (old), ' + user + ' (new),' + inquiryId);
 	
 	// first let's figure out what listings the user has already seen
 	var query = new Parse.Query("UserInquiryListing");
-	query.equalTo("userId", userId);
+	if ( user ){
+		query.equalTo("userId", user);		
+	} else if ( userId ){
+		query.equalTo("userId", userId); // depricate
+	}
+
 	query.limit(1000);
 	query.find().then(function(results){
 			
@@ -129,7 +137,11 @@ var fetchListingsForUserQuery = function(request, response){
 										
 										newListing.set("title", listingTitle);
 										newListing.set("price", listingPrice);
-										newListing.set("userId", userId);
+										if ( user ){
+											newListing.set("userId", user);
+										} else {
+											newListing.set("userId", userId);
+										}
 										newListing.set("listingId", listingId);
 										newListing.set("inquiryId", inquiryId);
 										newListing.set("url", listingUrl);
@@ -159,61 +171,76 @@ var fetchListingsForUserQuery = function(request, response){
 				subject = "";
 				text = "";
 				
-				if ( savedObjects.length > 0 ){
+				if ( savedObjects ){
+					if ( savedObjects.length > 0 ){
 					
-					if ( savedObjects.length > 1 ){
-						subject = savedObjects.length + " New Listings!";
-						for ( var k=0; k<savedObjects.length; k++){
-							obj = savedObjects[k];
-							text = text + "$" + obj.get("price") + " <a href='" + obj.get("url") + "'>" + obj.get("title") + "</a><br/>";
-						}
-					} else {
-						obj = savedObjects[0];
-						subject = "New: $" + obj.get("price") + " " + obj.get("title");
-						text = "$" + obj.get("price") + " <a href='" + obj.get("url") + "'>" + obj.get("title") + "</a>";
-					}
-		
-					// get user email
-					var query = new Parse.Query("User");
-					query.equalTo("userId", userId);
-					query.find().then(function(results){
-					
-						if ( results && results.length == 1 ){
-							userObj = results[0];
-							if ( userObj ){
-								// extract this into a function!! @todo
-								email = userObj.get("email");
-								isEnabled = userObj.get("enabled");
-								if ( email && isEnabled ){
-									Mailgun.sendEmail({
-										to: email,
-										from: "maillist@mattrestivo.com",
-										subject: subject,
-										html: text
-									}, {
-										success: function(httpResponse) {
-											//console.log(httpResponse);
-											notificationPromise.resolve(savedObjects);
-										},
-										error: function(httpResponse) {
-											//console.error(httpResponse);
-											notificationPromise.reject(httpResponse);
-										}
-									});
-								} else {
-									notificationPromise.resolve(savedObjects); // move along, no valid email
-								}
+						if ( savedObjects.length > 1 ){
+							subject = savedObjects.length + " New Listings!";
+							for ( var k=0; k<savedObjects.length; k++){
+								obj = savedObjects[k];
+								text = text + "$" + obj.get("price") + " <a href='" + obj.get("url") + "'>" + obj.get("title") + "</a><br/>";
 							}
 						} else {
-							notificationPromise.resolve(savedObjects); // move along, no user registered.
+							obj = savedObjects[0];
+							subject = "New: $" + obj.get("price") + " " + obj.get("title");
+							text = "$" + obj.get("price") + " <a href='" + obj.get("url") + "'>" + obj.get("title") + "</a>";
 						}
-					});
+		
+						// get user email
+						console.log(user);
+						console.log(userId);
+						if ( user ){
+							var query = new Parse.Query("User");
+							//query.get(user);
+						} else {
+							var query = new Parse.Query("User");
+							query.equalTo("userId", userId); // depricate
+						}
+						//query.find().then(function(results){ // depricate
+						query.get(user).then(function(results){
+							console.log('results');
+							console.log(results);
+							if ( results && results.length == 1 ){
+								userObj = results[0];
+								if ( userObj ){
+									// extract this into a function!! @todo
+									email = userObj.get("email");
+									console.log('success getting email -> ' + email);
+									isEnabled = userObj.get("enabled");
+									if ( email && isEnabled ){
+										Mailgun.sendEmail({
+											to: email,
+											from: "maillist@mattrestivo.com",
+											subject: subject,
+											html: text
+										}, {
+											success: function(httpResponse) {
+												//console.log(httpResponse);
+												notificationPromise.resolve(savedObjects);
+											},
+											error: function(httpResponse) {
+												//console.error(httpResponse);
+												notificationPromise.reject(httpResponse);
+											}
+										});
+									} else {
+										notificationPromise.resolve(savedObjects); // move along, no valid email
+									}
+								}
+							} else {
+								notificationPromise.resolve(savedObjects); // move along, no user registered.
+							}
+						});
 					
+					} else {
+						notificationPromise.resolve(savedObjects); // move along, nothing to save here.
+					}
 				} else {
 					notificationPromise.resolve(savedObjects); // move along, nothing to save here.
 				}
 				
-				return notificationPromise;
+				//return notificationPromise.resolve(savedObjects);				
+				//return notificationPromise;
 				
 			}
 		).then(
@@ -261,7 +288,8 @@ Parse.Cloud.job("fetchListingsForAllUsers", function(request, status) {
 			  r = {};
 			  enabled = false; // true;// = false;
 			  if ( result ){
-				  r.userId = result.get("userId");
+				  r.userId = result.get("userId"); // depricating.
+				  r.user = result.get("user");
 				  r.criteria = result.get("InquiryParameters");
 				  r.inquiryId = result.id;
 				  enabled = result.get("enabled");
