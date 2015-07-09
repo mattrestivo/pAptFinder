@@ -1,7 +1,5 @@
 <?php
 
-//phpinfo();
-
 require 'parse-php-sdk-master/autoload.php';
 use Parse\ParseObject; // for sure
 use Parse\ParseQuery; // for sure
@@ -14,14 +12,19 @@ use Parse\ParseClient;
 $app_id = "qaxPUYOQKh2qoynbAJpC41UWEU3AHJCLZCI2TJ9t";
 $master_key = "p7INvQ03y55rHQucjzx4dc9jNgdW4HdNMRBu5dnJ";
 $rest_key = "HhbpsJAcdVhMy2Q5i8l1rs59QikGAKb7wjv9Q7UR";
-
 ParseClient::initialize( $app_id, $rest_key, $master_key );
+
+$message = "";
+$enableWrite = 1; // flip this bit to enable changing the user's UserInquiry object
+
 	
-// FORM SUBMIT
 if ( $_POST && isset($_GET['user_session']) ){
 	
+	// -----
+	// PARSE FORM
+	// -----
 	$user_session = $_GET['user_session'];
-	echo "<!-- user_session: " . $user_session . " -->"; // vaidate this
+	//echo "<!-- user_session: " . $user_session . " -->";
 	
 	$price_min = $_POST['priceLow'];
 	$price_max = $_POST['priceHigh'];
@@ -56,7 +59,8 @@ if ( $_POST && isset($_GET['user_session']) ){
 			}
 		}
 	}
-//	echo "<!-- amenities[]: " . $amenities . " -->"; // to validate
+	//	echo "<!-- amenities[]: " . $amenities . " -->"; // to validate
+	// --
 
 	// -------
 	// USER - become the session user
@@ -64,30 +68,66 @@ if ( $_POST && isset($_GET['user_session']) ){
 	try {
 		$user = ParseUser::become($user_session);
 	} catch (ParseException $ex) {
-		echo '<!-- error becoming this user_session ' . $user_session . ' -->';
+		$message = "There was an error authenticating you. Try logging out.";
 	}
 	
+	
+	// Retrieve the UserInquiry by User ID
+	$userInquiryObj = null;
 	$query = new ParseQuery("UserInquiry");
-	$query->equalTo("userId", "mattrestivo"); // rid of this, remove the userId dependancy and base it on user's encrypted username
+	$userObjectId = $user->getObjectId();
+	$query->equalTo("user", $userObjectId); // @todo - rid of this, remove the userId dependancy and base it on user's encrypted username, ensure u save userID to userInquiry Listing in main.js
 	$query->limit(1);
 	$userInquiry = $query->find();
-	echo "<!-- successfully retrieved " . count($userInquiry) . " userInquiry"; // delete if below is ok
-	
-	$userInquiryObj = $userInquiry[0];
-	echo "<!-- sucesfully retrieved " . $userInquiryObj->get('InquiryParameters') . ' -->';
+	if ( count($userInquiry) == 0 ){
+		$userInquiryObj = new ParseObject("UserInquiry");
+		$userInquiryObj->set("user", $userObjectId);
+		try {
+		  $userInquiryObj->save();
+		} catch (ParseException $ex2) {  
+		  // Execute any logic that should take place if the save fails.
+		  // error is a ParseException object with an error code and message.
+		  echo $ex2->getMessage();
+		}
+	}
+	try {
+		$userInquiry = $query->find();
+		$userInquiryObj = $userInquiry[0];
+	} catch (ParseException $ex) {
+		echo "failed to find obj";
+	}
+	//echo "<!-- sucesfully retrieved " . $userInquiryObj->get('InquiryParameters') . ' -->';
+	// --
 
-
-	// build the inquiryParam String
+	// Build the new inquiryParameter String for the user
 	$inquiryParameterString = "criteria=rental_type:frbo,brokernofee,brokerfee|";
 	$inquiryParameterString = $inquiryParameterString . "price:" . $price_min . "-" . $price_max . "|";
-	$inquiryParameterString = $inquiryParameterString . "area:" . $area . "|";
-	$inquiryParameterString = $inquiryParameterString . "beds:" . $beds . "|";
-	$inquiryParameterString = $inquiryParameterString . "amenities:" . $amenities . "|";
+	if ( $area != "" ){
+		$inquiryParameterString = $inquiryParameterString . "area:" . $area . "|";
+	}
+	if ( $beds != "" ){
+		$inquiryParameterString = $inquiryParameterString . "beds:" . $beds . "|";
+	}
+	if ( $amenities != "" ){
+		$inquiryParameterString = $inquiryParameterString . "amenities:" . $amenities;	
+	}
+	// --
 	
-	// set the user's new preferences!
-	echo '<!-- ready to write new prefs - ' . $inquiryParameterString . ' -->';
-	// $userInquiryObj->set('InquiryParameters',$inquiryParameterString);
-	
+	// Actually go ahead and set the new preferences	
+	// echo '<!-- ready to write new prefs - ' . $inquiryParameterString . ' -->';
+	if ( $enableWrite == 1 ){
+		$userInquiryObj->set('InquiryParameters', $inquiryParameterString);
+		$userInquiryObj->set("enabled", true);
+		try {
+		  $userInquiryObj->save();
+		  $message = 'Successfully updated your preferences!';
+		} catch (ParseException $ex) {  
+		  // Execute any logic that should take place if the save fails.
+		  // error is a ParseException object with an error code and message.
+		  $message = 'Oops, something went wrong. <!-- ' . $ex->getMessage() . ' -->';
+		}
+	}
+	// --
 
 }
 
@@ -104,6 +144,11 @@ if ( $_POST && isset($_GET['user_session']) ){
 		<meta name="viewport" content="width=device-width">
 	</head>
 	<body>
+		<?
+		if ( $message != "" ){
+			echo '<h3>'.$message.'</h3>';
+		}
+		?>
 		<form id="mainForm" action="" method="post">
 			
 			<p>
