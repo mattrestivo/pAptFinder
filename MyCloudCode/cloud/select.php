@@ -15,6 +15,7 @@ $rest_key = "HhbpsJAcdVhMy2Q5i8l1rs59QikGAKb7wjv9Q7UR";
 ParseClient::initialize( $app_id, $rest_key, $master_key );
 
 $message = "";
+$subMessage = "";
 $enableWrite = 1; // flip this bit to enable changing the user's UserInquiry object
 
 	
@@ -69,7 +70,8 @@ if ( $_POST && isset($_GET['user_session']) ){
 	try {
 		$user = ParseUser::become($user_session);
 	} catch (ParseException $ex) {
-		$message = "There was an error authenticating you. Try logging out.";
+		$message = "Error";
+		$subMessage = "Try logging out and logging back in.";
 	}
 	
 	
@@ -123,17 +125,17 @@ if ( $_POST && isset($_GET['user_session']) ){
 			$userInquiryObj->set("enabled", true);
 			try {
 				$userInquiryObj->save();
-				$message = 'Successfully updated your preferences!';
+				$message = "Updated!";
+				$subMessage = "You will now recieve apartment listings the minute they are listed directly to your phone.";
 			} catch (ParseException $ex) {  
 				// Execute any logic that should take place if the save fails.
 				// error is a ParseException object with an error code and message.
 				$message = 'Oops, something went wrong. <!-- ' . $ex->getMessage() . ' -->';
 			}
 		}
+	}
 }
-	// --
-
-}
+// --
 
 
 ?>
@@ -153,9 +155,11 @@ if ( $_POST && isset($_GET['user_session']) ){
 	<body>
 		<?
 		if ( $message != "" ){
-			echo '<div class="row"><div class="panel callout radius">';
+			echo '<div class="row" style="margin-top: 10px;"><div class="panel callout radius">';
 			  echo '<h5>'.$message.'</h5>';
-			  //echo '<p>Its a little ostentatious, but useful for important content.</p>'
+			  if ( $subMessage != "" ){
+				  echo '<p>'.$subMessage.'</p>';
+			  }
 			echo '</div></div>';
 		}
 		?>
@@ -168,7 +172,13 @@ if ( $_POST && isset($_GET['user_session']) ){
 					    	<span class="prefix">Min ($)</span>
 					    </div>
 					    <div class="small-9 columns">
-					        <input type="text" name="priceLow" id="priceLow" placeholder="$" required>
+					        <input type="text" name="priceLow" id="priceLow" placeholder="<?
+							if ( $priceMin ){
+								echo $priceMin;
+							} else {
+								echo "$";
+							}
+							?>" required>
 						</div>
 					</div>
 				</div>
@@ -176,7 +186,7 @@ if ( $_POST && isset($_GET['user_session']) ){
 					<label>&nbsp;</label>
 					<div class="row collapse postfix-radius">
 					    <div class="small-9 columns">
-					        <input type="text" name="priceHigh" id="priceHigh" placeholder="$" required>
+					        <input type="text" name="priceHigh" id="priceHigh" placeholder="<? if ( $priceMax ){ echo $priceMax; } else { echo "$"; }?>" required>
 						</div>
 						<div class="small-3 columns">
 					    	<span class="postfix">Max ($)</span>
@@ -214,18 +224,19 @@ if ( $_POST && isset($_GET['user_session']) ){
 							<option value="104">Financial District</option>
 							<option value="114">Fulton/Seaport</option>
 							<option value="158">Flatiron</option>
-							<option value="159">NoMad</option>
 							<option value="113">Gramercy Park</option>
 							<option value="116">Greenwich Village</option>
-							<option value="118">Noho</option>
 							<option value="108">Little Italy</option>
 							<option value="109">Lower East Side</option>
+							<option value="118">Noho</option>
+							<option value="159">NoMad</option>
 							<option value="162">Nolita</option>
 							<option value="107">Soho</option>
 							<option value="106">Stuyvesant Town/PCV</option>
 							<option value="105">Tribeca</option>
 							<option value="157">West Village</option>
-							<option value="300"><b>Brooklyn</b></option>
+							<option value=""> </option>
+							<option value="300"><b>All of Brooklyn</b></option>
 							<option value="306">Boerum Hill</option>
 							<option value="305">Brooklyn Heights</option>
 							<option value="321">Caroll Gardens</option>
@@ -239,7 +250,8 @@ if ( $_POST && isset($_GET['user_session']) ){
 							<option value="326">Prospect Heights</option>
 							<option value="318">Red Hook</option>
 							<option value="302">Williamsburg</option>
-							<option value="400"><b>Queens</b></option>
+							<option value=""> </option>
+							<option value="400"><b>All of Queens</b></option>
 							<option value="401">Astoria</option>
 							<option value="428">Bayside</option>
 							<option value="415">Forest Hills</option>
@@ -268,18 +280,13 @@ if ( $_POST && isset($_GET['user_session']) ){
 
 			<div class="row">
 				<!--<input type="submit" value="Save">-->
-				<a role="button" aria-label="submit form" href="#" class="button" onclick="document.getElementById('mainForm').submit(); return false;">Save</a>
+				<a role="button" aria-label="submit form" href="#" class="button" onclick="document.getElementById('mainForm').submit();return false;">Save</a>
 			</div>
 			
 		</form>
 		
 		<script src="http://www.parsecdn.com/js/parse-1.2.12.min.js"></script>
 		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
-		<script src="app.js"></script>
 	
 	</body>
-</html><?php
-
-echo '<!-- end -->';
-
-?>
+</html>
