@@ -189,7 +189,9 @@ var fetchListingsForUserQuery = function(request, response){
 								}
 							}
 							
-							console.log('saving ' + _SAVE_OBJS.length + ' new listings for user.');
+							if ( _SAVE_OBJS.length > 0 ){
+								console.log('saving ' + _SAVE_OBJS.length + ' new listings for user.');
+							}
 							return Parse.Object.saveAll(_SAVE_OBJS);
 						
 						}
