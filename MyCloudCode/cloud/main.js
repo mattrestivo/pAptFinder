@@ -4,12 +4,13 @@ var _SE_PARAMS 	= 	{
 	criteria: "&criteria=rental_type:frbo,brokernofee,brokerfee|price:1750-2152|area:115,158,116,108,162,107,157,306,322,323,305|beds:=1|sort_by:listed_desc|",
 	limit: 50,
 	format: "json",
-	key: "0523e568930021b573ca6e1e1089327b61ad56e9"
+	key: "0523e568930021b573ca6e1e1089327b61ad56e9" // "18349ae37094e6406c141f395762c614246590b9" // alt
 }
+// sample: http://streeteasy.com/nyc/api/rentals/search?format=json&key=18349ae37094e6406c141f395762c614246590b9&limit=50&criteria=rental_type:frbo,brokernofee,brokerfee|price:1500-2799|area:162,107,157|beds:1|
 var _USER_EXISTING_LISTINGS = [];
 var _USER_DESTROY_LISTINGS = [];
 var _SAVE_OBJS = [];
-var LISTINGS_VALID_TTL = 604800000;
+var LISTINGS_VALID_TTL = 604800000; // 7 days
 // testing data (overridden when the function is called via the job)
 var userId = null; // "mattrestivo"; // depricating.
 var inquiryId = "JGn1ubwaff";
@@ -18,6 +19,9 @@ var inquiryId = "JGn1ubwaff";
 var indexOf=function(n){return indexOf="function"==typeof Array.prototype.indexOf?Array.prototype.indexOf:function(n){var r=-1,t=-1;for(r=0;r<this.length;r++)if(this[r]===n){t=r;break}return t},indexOf.call(this,n)};
 var _ = require('underscore.js');
 var Mailgun = require('mailgun');
+replaceAll = function(find, replace, str) {
+  return str.replace(new RegExp(find, 'g'), replace);
+}
 Mailgun.initialize('mg.mattrestivo.com', 'key-ef6f2ffb1718bfeb99f84a0dbb6b71e6');
 
 // main function, fetch listings for specified user and criteria
@@ -42,8 +46,7 @@ var fetchListingsForUserQuery = function(request, response){
 		}
 	}
 	
-	console.log('>> fetchListingsForUserQuery >>>');
-	console.log(userId + ' (old), ' + user + ' (new),' + inquiryId);
+	console.log('* fetchListingsForUserQuery - user:' + user + ', inquiry:' + _SE_PARAMS.criteria);
 	
 	// first let's figure out what listings the user has already seen
 	var query = new Parse.Query("UserInquiryListing");
@@ -84,7 +87,7 @@ var fetchListingsForUserQuery = function(request, response){
 			return Parse.Promise.as();
 		}
 		
-	// with this list, now let's get the new listings.
+	// we need to destroy listings older than LISTINGS_VALID_TTL
 	).then(
 		function(){
 			var promise = Parse.Promise.as();
@@ -92,13 +95,15 @@ var fetchListingsForUserQuery = function(request, response){
 				// For each item, extend the promise with a function to delete it.
 				promise = promise.then(function() {
 					// Return a promise that will be resolved when the delete is finished.
-					console.log('destroying ->');
-					console.log(obj);
+					console.log('destroying old listings so we dont have too many to de-dup ->');
+					//console.log(obj);
 					return obj.destroy();
 				});
 			});
 			return promise;
 		}
+	
+	// with this list, now let's get the new listings.	
 	).then(
 		function(){
 			//console.log('making http request');
@@ -112,28 +117,55 @@ var fetchListingsForUserQuery = function(request, response){
 	// we finally sorted this out, now let's save
 	).then(
 		function(httpResponse){
-			//console.log('into http success handler');
 			jResponse = JSON.parse(httpResponse.text);
-			
 			if ( jResponse ){
 				// we can easily exclude records we already got, and write them to parse
 				if ( jResponse.listings ){
-					listingsArray = jResponse.listings;
-					if ( listingsArray.length > 0 ){
-						_SAVE_OBJS = [];
-						for (var i=0; i<listingsArray.length; i++){
-							if ( listingsArray[i] ){
-								obj = listingsArray[i];
-								now = new Date();
-								diff = new Date(obj.created_at);
-								diff = now - diff;
-								if ( indexOf.call(_USER_EXISTING_LISTINGS, obj.id+"") == -1 && diff < LISTINGS_VALID_TTL ){ 
-									var newListing = new Parse.Object("UserInquiryListing");			
+					
+					// 7/17 -- streeteasy API updated.
+					// listingsArray = jResponse.listings;
+					
+					lObject = jResponse.listings;
+					if ( lObject.object ){
+						
+						lObjectObjectArray = lObject.object;
+						listingsArray = lObjectObjectArray;
+					
+						if ( listingsArray.length > 0 ){
+							// console.log(listingsArray.length);
+							_SAVE_OBJS = [];
+							for (var i=0; i<listingsArray.length; i++){
+								if ( listingsArray[i] ){
+									obj = listingsArray[i];
+									obj = obj.rental; // note that this needs to be changed if we support sales.
+									now = new Date();
+									diff = new Date(obj.created_at);
+									diff = now - diff;
+									if ( indexOf.call(_USER_EXISTING_LISTINGS, obj.id+"") == -1 && diff < LISTINGS_VALID_TTL ){ 
+										var newListing = new Parse.Object("UserInquiryListing");			
 										listingId = obj.id+'';
 										listingPrice = obj.price+'';
-										listingTitle = obj.clean_title;
-										listingUrl = obj.url+'';
+										listingTitle = obj.title;
 										listingCreated = obj.created_at;
+										
+										// listing url
+										// api update 7/17 now we have to manually build url. // listingUrl = obj.url+'';
+										streetAddress = obj.building_idstr;
+										streetAddress = streetAddress.replace(/\s+/g, '-');
+										listingUrl = "http://streeteasy.com/building/" + streetAddress + "/" + obj.addr_unit_idstr;
+										listingUrl = listingUrl.toLowerCase();
+										
+										// source
+										sourceUrl = null;
+										if ( obj.sourceuri != '' ){
+											sourceUrl = obj.sourceuri+'';
+										}
+										
+										// thumb
+										thumbUrl = obj.medium_image_uri;
+										if ( thumbUrl == "/images2014/no_photo_medium_square.png" ){
+											thumbUrl = "http://cdn-img0.streeteasy.com/images2014/no_photo_medium_square.png";
+										}
 										
 										newListing.set("title", listingTitle);
 										newListing.set("price", listingPrice);
@@ -144,20 +176,23 @@ var fetchListingsForUserQuery = function(request, response){
 										}
 										newListing.set("listingId", listingId);
 										newListing.set("inquiryId", inquiryId);
+										newListing.set("thumbUrl", thumbUrl);
 										newListing.set("url", listingUrl);
+										newListing.set("sourceUrl", sourceUrl);
 										newListing.set("created", listingCreated);
 										
 										_SAVE_OBJS[_SAVE_OBJS.length] = newListing;
 
-								} else {
-									//console.log('found a duplicate listing: ' + obj.id);
+									} else {
+										//console.log('found a duplicate listing: ' + obj.id);
+									}
 								}
 							}
-						}
 							
-						console.log('saving ' + _SAVE_OBJS.length + ' new listings for user.');
-						return Parse.Object.saveAll(_SAVE_OBJS);
+							console.log('saving ' + _SAVE_OBJS.length + ' new listings for user.');
+							return Parse.Object.saveAll(_SAVE_OBJS);
 						
+						}
 					}						
 				}
 			}
@@ -178,17 +213,31 @@ var fetchListingsForUserQuery = function(request, response){
 							subject = savedObjects.length + " New Listings!";
 							for ( var k=0; k<savedObjects.length; k++){
 								obj = savedObjects[k];
-								text = text + "$" + obj.get("price") + " <a href='" + obj.get("url") + "'>" + obj.get("title") + "</a><br/>";
+								text = text + "$" + obj.get("price") + " <a href='" + obj.get("url") + "'>" + obj.get("title") + "</a>";
+								if ( obj.get("sourceUrl") ){
+									text = text + " | <a href='"+obj.get('sourceUrl')+"'>Original Listing</a>";
+								}
+								if ( obj.get("thumbUrl") ){
+									text = text + "<br/><img src='"+obj.get('thumbUrl')+"' />";
+								}
+								text = text + "<br/><br/>";
 							}
 						} else {
 							obj = savedObjects[0];
 							subject = "New: $" + obj.get("price") + " " + obj.get("title");
 							text = "$" + obj.get("price") + " <a href='" + obj.get("url") + "'>" + obj.get("title") + "</a>";
+							if ( obj.get("sourceUrl") ){
+								text = text + " | <a href='"+obj.get('sourceUrl')+"'>Original Listing</a>";
+							}
+							if ( obj.get("thumbUrl") ){
+								text = text + "<br/><img src='"+obj.get('thumbUrl')+"' /><br/>";
+							}
+							text = text + "<br/><br/>";
 						}
 		
 						// get user email
-						console.log(user);
-						console.log(userId);
+						// console.log(user);
+						// console.log(userId);
 						if ( user ){
 							var query = new Parse.Query("User");
 							query.equalTo("objectId", user);
@@ -246,14 +295,15 @@ var fetchListingsForUserQuery = function(request, response){
 		).then(
 			function(savedObjects){
 				
-				console.log('<<< fetchListingsForUserQuery complete <<');
+				console.log('*****');
 				//response.success(a);
 				promise.resolve(savedObjects);
 			
 			}, function(error) {
 
-				console.log('<<< fetchListingsForUserQuery errored <<');
+				console.log('* fetchListingsForUserQuery ERRORED');
 				console.log(error);
+				console.log('*****');
 				//response.error(error);
 				promise.reject(error);
 
@@ -269,54 +319,124 @@ Parse.Cloud.define("fetchListingsForUserQuery", function(request, response){
 	return fetchListingsForUserQuery(request,response);
 });
 
+
 // setup job to run that finds listings for all queries
+// note that there are now 2 of these jobs, so if you change this code, it needs to be changed below.
 Parse.Cloud.job("fetchListingsForAllUsers", function(request, status) {
 
-  // Set up to modify user data
-  console.log('*********************');
-  console.log('STARTING FETCH JOB');
-  console.log('*********************');
+	if ( request ){
+		if ( request.params && request.params.apikey ){
+			_SE_PARAMS.key = request.params.apikey; // allows me to run multiple jobs with multiple apikeys
+		}
+	}
+
+	// Set up to modify user data
+	console.log('*********************');
+	console.log('STARTING FETCH JOB');
+	console.log('Time: ' + new Date());
+	console.log('API Key: ' + _SE_PARAMS.key);
+	console.log('*********************');
   
-  // Query for all inquiries
-  var query = new Parse.Query("UserInquiry");
+	// Query for all inquiries
+	var query = new Parse.Query("UserInquiry");
   
-  query.find().then(function(results){
+	query.find().then(function(results){
   	
-	  var promise = Parse.Promise.as();
-	  _.each(results, function(result){
-		  promise = promise.then(function(){
-			  r = {};
-			  enabled = false; // true;// = false;
-			  if ( result ){
-				  //r.userId = result.get("userId"); // depricating.
-				  r.user = result.get("user");
-				  r.criteria = result.get("InquiryParameters");
-				  r.inquiryId = result.id;
-				  enabled = result.get("enabled");
-			  }
-			  if ( enabled ){
-				  return fetchListingsForUserQuery(r,null);
-			  } else {
-				  return promise.resolve();
-			  }
-		  });
-	  });
+		var promise = Parse.Promise.as();
+		_.each(results, function(result){
+			promise = promise.then(function(){
+				r = {};
+				enabled = false; // true;// = false;
+				if ( result ){
+					//r.userId = result.get("userId"); // depricating.
+					r.user = result.get("user");
+					r.criteria = result.get("InquiryParameters");
+					r.inquiryId = result.id;
+					enabled = result.get("enabled");
+				}
+				if ( enabled ){
+					return fetchListingsForUserQuery(r,null);
+				} else {
+					return promise.resolve();
+				}
+			});
+		});
 	  
-	  return promise;
+		return promise;
 	
-  }).then(function(request) {
+	}).then(function(request) {
 	
-	console.log('*********************');
-	console.log('COMPLETED FETCH JOB');
-	console.log('*********************');
-    status.success("Successfully looped through all users, and called listing fetch");
+		console.log('*********************');
+		console.log('COMPLETED FETCH JOB');
+		console.log("Successfully looped through all users, and called listing fetch");
+		console.log('*********************');
+		status.success('Success');
 	
-  }, function(error) {
-    // Set the job's error status
-	console.log('*********************');
-	console.log('FETCH JOB ERRORED');
-	console.log('*********************');
-    status.error("Uh oh, something went wrong with the query.");
-  });
+	}, function(error) {
+		// Set the job's error status
+		console.log('*********************');
+		console.log('FETCH JOB ERRORED');
+		console.log('*********************');
+		status.error("Uh oh, something went wrong with the query.");
+	});
   
+});
+
+
+Parse.Cloud.job("fetchListingsForAllUsers2", function(request, status) {
+	if ( request ){
+		if ( request.params && request.params.apikey ){
+			_SE_PARAMS.key = request.params.apikey; // allows me to run multiple jobs with multiple apikeys
+		}
+	}
+
+	// Set up to modify user data
+	console.log('*********************');
+	console.log('STARTING FETCH JOB #2');
+	console.log('Time: ' + new Date());
+	console.log('API Key: ' + _SE_PARAMS.key);
+	console.log('*********************');
+  
+	// Query for all inquiries
+	var query = new Parse.Query("UserInquiry");
+  
+	query.find().then(function(results){
+  	
+		var promise = Parse.Promise.as();
+		_.each(results, function(result){
+			promise = promise.then(function(){
+				r = {};
+				enabled = false; // true;// = false;
+				if ( result ){
+					//r.userId = result.get("userId"); // depricating.
+					r.user = result.get("user");
+					r.criteria = result.get("InquiryParameters");
+					r.inquiryId = result.id;
+					enabled = result.get("enabled");
+				}
+				if ( enabled ){
+					return fetchListingsForUserQuery(r,null);
+				} else {
+					return promise.resolve();
+				}
+			});
+		});
+	  
+		return promise;
+	
+	}).then(function(request) {
+	
+		console.log('*********************');
+		console.log('COMPLETED FETCH JOB #2');
+		console.log("Successfully looped through all users, and called listing fetch");
+		console.log('*********************');
+		status.success('Success');
+	
+	}, function(error) {
+		// Set the job's error status
+		console.log('*********************');
+		console.log('FETCH JOB #2 ERRORED');
+		console.log('*********************');
+		status.error("Uh oh, something went wrong with the query.");
+	});
 });
