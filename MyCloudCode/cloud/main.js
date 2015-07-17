@@ -11,7 +11,7 @@ var _USER_DESTROY_LISTINGS = [];
 var _SAVE_OBJS = [];
 var LISTINGS_VALID_TTL = 604800000;
 // testing data (overridden when the function is called via the job)
-var userId = "mattrestivo"; // depricating.
+var userId = null; // "mattrestivo"; // depricating.
 var inquiryId = "JGn1ubwaff";
 
 // helpers
@@ -31,9 +31,9 @@ var fetchListingsForUserQuery = function(request, response){
 		if ( request.criteria ){
 			_SE_PARAMS.criteria = request.criteria;
 		}
-		if ( request.userId ){ // depricate
-			userId = request.userId;
-		}
+//		if ( request.userId ){ // depricate
+//			userId = request.userId;
+//		}
 		if ( request.user ){
 			user = request.user;
 		}
@@ -191,23 +191,22 @@ var fetchListingsForUserQuery = function(request, response){
 						console.log(userId);
 						if ( user ){
 							var query = new Parse.Query("User");
-							//query.get(user);
+							query.equalTo("objectId", user);
 						} else {
 							var query = new Parse.Query("User");
 							query.equalTo("userId", userId); // depricate
 						}
-						//query.find().then(function(results){ // depricate
-						query.get(user).then(function(results){
-							console.log('results');
-							console.log(results);
+						query.find().then(function(results){
+							//console.log('results');
+							//console.log(results);
 							if ( results && results.length == 1 ){
 								userObj = results[0];
 								if ( userObj ){
 									// extract this into a function!! @todo
 									email = userObj.get("email");
-									console.log('success getting email -> ' + email);
 									isEnabled = userObj.get("enabled");
 									if ( email && isEnabled ){
+										console.log('about to send email to -> ' + email);
 										Mailgun.sendEmail({
 											to: email,
 											from: "maillist@mattrestivo.com",
@@ -228,6 +227,7 @@ var fetchListingsForUserQuery = function(request, response){
 									}
 								}
 							} else {
+								console.log('no registered user found via query');
 								notificationPromise.resolve(savedObjects); // move along, no user registered.
 							}
 						});
@@ -271,8 +271,8 @@ Parse.Cloud.define("fetchListingsForUserQuery", function(request, response){
 
 // setup job to run that finds listings for all queries
 Parse.Cloud.job("fetchListingsForAllUsers", function(request, status) {
+
   // Set up to modify user data
-  var counter = 0;
   console.log('*********************');
   console.log('STARTING FETCH JOB');
   console.log('*********************');
@@ -288,7 +288,7 @@ Parse.Cloud.job("fetchListingsForAllUsers", function(request, status) {
 			  r = {};
 			  enabled = false; // true;// = false;
 			  if ( result ){
-				  r.userId = result.get("userId"); // depricating.
+				  //r.userId = result.get("userId"); // depricating.
 				  r.user = result.get("user");
 				  r.criteria = result.get("InquiryParameters");
 				  r.inquiryId = result.id;
