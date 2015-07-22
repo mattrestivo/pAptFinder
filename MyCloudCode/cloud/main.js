@@ -290,8 +290,7 @@ var fetchListingsForUserQuery = function(request, response){
 					notificationPromise.resolve(savedObjects); // move along, nothing to save here.
 				}
 				
-				//return notificationPromise.resolve(savedObjects);				
-				//return notificationPromise;
+				return notificationPromise;
 				
 			}
 		).then(
