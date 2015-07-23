@@ -381,9 +381,9 @@ if ( $_POST && $_POST['priceLow'] ){
 							for ($i = 0; $i < count($amenityOptions); $i++) {
 								echo '<option';
 								if ( is_string($amenities) ){
-									$amenities = explode(",",$amenities);
+									$amenities = explode(",", $amenities);
 								}
-								if ( in_array($amenityIds[$i], $amenities) ){
+								if ( isset($amenities) && in_array($amenityIds[$i], $amenities) ){
 									echo ' selected';
 								}
 								echo ' value="' . $amenityIds[$i] . '">' . $amenityOptions[$i] . '</option>';
