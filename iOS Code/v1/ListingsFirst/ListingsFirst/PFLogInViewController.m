@@ -91,6 +91,10 @@
     return UIInterfaceOrientationMaskPortrait;
 }
 
+-(BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
+    return NO;
+}
+
 /*
 #pragma mark - Navigation
 

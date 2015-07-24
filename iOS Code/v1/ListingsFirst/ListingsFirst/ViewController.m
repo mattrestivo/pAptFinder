@@ -28,9 +28,7 @@
     
     // retreive current user session from parse.
     NSString *sessionToken = [PFUser currentUser].sessionToken;
-    
-    NSLog(@"%@",@"this is it dude!");
-    NSLog(@"%@",sessionToken);
+    NSLog(@"User Session Token: %@",sessionToken);
     
     NSString *urlAddress = [NSString stringWithFormat: @"http://mattrestivo.com/tml/select.php?user_session=%@",sessionToken];
     NSURL *url = [NSURL URLWithString:urlAddress];
@@ -105,6 +103,9 @@
 - (NSUInteger)supportedInterfaceOrientations
 {
     return UIInterfaceOrientationMaskPortrait;
+}
+-(BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
+    return NO;
 }
 
 @end
