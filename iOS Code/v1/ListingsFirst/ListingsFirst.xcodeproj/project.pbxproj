@@ -73,6 +73,7 @@
 		C946350A1B6190790004F99C /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		C946350C1B61907F0004F99C /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		C946350E1B61908F0004F99C /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		C94635101B61E5F30004F99C /* Listings_First_APNs_Development_Profile.mobileprovision */ = {isa = PBXFileReference; lastKnownFileType = file; name = Listings_First_APNs_Development_Profile.mobileprovision; path = ../../../../../../../Downloads/Listings_First_APNs_Development_Profile.mobileprovision; sourceTree = "<group>"; };
 		C950C5911B6177C1008CFAC7 /* ListingsFirst.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ListingsFirst.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C950C5951B6177C1008CFAC7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C950C5961B6177C1008CFAC7 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -169,6 +170,7 @@
 		C950C5941B6177C1008CFAC7 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				C94635101B61E5F30004F99C /* Listings_First_APNs_Development_Profile.mobileprovision */,
 				C950C5951B6177C1008CFAC7 /* Info.plist */,
 				C94634EE1B61879B0004F99C /* login-w-fb.png */,
 				C950C5961B6177C1008CFAC7 /* main.m */,
@@ -452,7 +454,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "Apple Development IOS Push Services: com.mattrestivo.ListingsFirst";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -464,7 +466,7 @@
 				INFOPLIST_FILE = ListingsFirst/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE = "92e0daad-237f-4026-9ad6-4df0ab3bce36";
 			};
 			name = Debug;
 		};
@@ -472,7 +474,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "Apple Development IOS Push Services: com.mattrestivo.ListingsFirst";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -484,7 +486,7 @@
 				INFOPLIST_FILE = ListingsFirst/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE = "92e0daad-237f-4026-9ad6-4df0ab3bce36";
 			};
 			name = Release;
 		};

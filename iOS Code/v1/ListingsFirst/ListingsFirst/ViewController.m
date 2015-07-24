@@ -30,6 +30,11 @@
     NSString *sessionToken = [PFUser currentUser].sessionToken;
     NSLog(@"User Session Token: %@",sessionToken);
     
+    // ensure that we map the user's installation to their PFUser ObjectID as a channel.
+    PFInstallation *currentInstallation = [PFInstallation currentInstallation];
+    [currentInstallation addUniqueObject:[PFUser currentUser].objectId forKey:@"channels"];
+    [currentInstallation saveInBackground];
+    
     NSString *urlAddress = [NSString stringWithFormat: @"http://mattrestivo.com/tml/select.php?user_session=%@",sessionToken];
     NSURL *url = [NSURL URLWithString:urlAddress];
     NSURLRequest *requestObj = [NSURLRequest requestWithURL:url];
