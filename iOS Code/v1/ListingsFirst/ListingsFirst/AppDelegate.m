@@ -42,10 +42,40 @@
     // ****************************************************************************
     [PFFacebookUtils initializeFacebookWithApplicationLaunchOptions:launchOptions];
     
-    // @todo - do some work here to add the login view controller to the view.
-    self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:[[PFLogInViewController alloc] init]];
-    self.window.backgroundColor = [UIColor whiteColor];
-    [self.window makeKeyAndVisible];
+    // ****************************************************************************
+    // Handle Launch from Notification
+    // ****************************************************************************
+    NSDictionary *notificationPayload = launchOptions[UIApplicationLaunchOptionsRemoteNotificationKey];
+    
+    if ( notificationPayload ){
+        
+        NSLog(@"Found a notification payload");
+        
+        // for now, let's just open the streeteasy URL in a webview.
+        NSString *url = [notificationPayload objectForKey:@"url"]; // temp for now
+        NSString *objectId = [notificationPayload objectForKey:@"id"]; // convert to use this and build a cool native view
+        
+        // add a uiwebview to rootviewcontroller and open the url.
+        CGRect webFrame = CGRectMake(0.0, 0.0, self.window.frame.size.width, self.window.frame.size.height);
+        UIWebView *webView = [[UIWebView alloc] initWithFrame:webFrame];
+        [webView setBackgroundColor:[UIColor clearColor]];
+        NSURL *openUrl = [NSURL URLWithString:url];
+        NSURLRequest *requestObj = [NSURLRequest requestWithURL:openUrl];
+        [webView loadRequest:requestObj];
+        self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:[[UIViewController alloc] init]];
+        [self.window.rootViewController.view addSubview:webView];
+        self.window.backgroundColor = [UIColor whiteColor];
+        [self.window makeKeyAndVisible];
+        
+    // ****************************************************************************
+    // add the login view controller to the rootViewController
+    // ****************************************************************************
+
+    } else {
+        self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:[[PFLogInViewController alloc] init]];
+        self.window.backgroundColor = [UIColor whiteColor];
+        [self.window makeKeyAndVisible];
+    }
 
     
     return YES;

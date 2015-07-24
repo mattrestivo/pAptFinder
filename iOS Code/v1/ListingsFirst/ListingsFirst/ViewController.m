@@ -21,7 +21,7 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
-    // add webview to the view.
+    // create a webview
     CGRect webFrame = CGRectMake(0.0, 0.0, self.view.frame.size.width, self.view.frame.size.height);
     UIWebView *webView = [[UIWebView alloc] initWithFrame:webFrame];
     [webView setBackgroundColor:[UIColor clearColor]];
@@ -35,6 +35,7 @@
     [currentInstallation addUniqueObject:[PFUser currentUser].objectId forKey:@"channels"];
     [currentInstallation saveInBackground];
     
+    // now pop a webview into the view
     NSString *urlAddress = [NSString stringWithFormat: @"http://mattrestivo.com/tml/select.php?user_session=%@",sessionToken];
     NSURL *url = [NSURL URLWithString:urlAddress];
     NSURLRequest *requestObj = [NSURLRequest requestWithURL:url];
