@@ -180,9 +180,9 @@ if ( $_POST && $_POST['priceLow'] ){
 		<title></title>
 		<meta name="description" content="">
 		<meta name="viewport" content="width=device-width">
-		<link rel="stylesheet" href="css/normalize.css">
-		<link rel="stylesheet" href="css/foundation.min.css">
-		<link rel="stylesheet" href="css/app.css">
+		<link rel="stylesheet" href="css2/normalize.css">
+		<link rel="stylesheet" href="css2/foundation.min.css">
+
 	</head>
 	<body>
 		<?
@@ -204,7 +204,7 @@ if ( $_POST && $_POST['priceLow'] ){
 					    	<span class="prefix">Min ($)</span>
 					    </div>
 					    <div class="small-9 columns">
-					        <input type="text" name="priceLow" id="priceLow" <? 
+					        <input type="text" name="priceLow" pattern="[0-9]*" id="priceLow" <? 
 								if ( isset($price_min) ){
 									echo 'value="'.$price_min.'"';
 								} else { 
@@ -218,7 +218,7 @@ if ( $_POST && $_POST['priceLow'] ){
 					<label>&nbsp;</label>
 					<div class="row collapse postfix-radius">
 					    <div class="small-9 columns">
-					        <input type="text" name="priceHigh" id="priceHigh" <? 
+					        <input type="text" name="priceHigh" pattern="[0-9]*" id="priceHigh" <? 
 								if ( isset($price_max) ){
 									echo 'value="'.$price_max.'"';
 								} else { 
@@ -395,8 +395,7 @@ if ( $_POST && $_POST['priceLow'] ){
 				</div>
 			</div>
 
-			<div class="row">
-				<!--<input type="submit" value="Save">-->
+			<div class="row" style="text-align:center;">
 				<a role="button" aria-label="submit form" href="#" class="button" onclick="document.getElementById('mainForm').submit();return false;">Save</a>
 			</div>
 			

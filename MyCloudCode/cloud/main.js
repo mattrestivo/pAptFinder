@@ -141,7 +141,7 @@ var fetchListingsForUserQuery = function(request, response){
 									now = new Date();
 									diff = new Date(obj.created_at);
 									diff = now - diff;
-									if ( indexOf.call(_USER_EXISTING_LISTINGS, obj.id+"") == -1 && diff < LISTINGS_VALID_TTL ){ 
+									if ( indexOf.call(_USER_EXISTING_LISTINGS, obj.id+"") == -1 && diff < LISTINGS_VALID_TTL && obj.building_idstr ){ 
 										var newListing = new Parse.Object("UserInquiryListing");			
 										listingId = obj.id+'';
 										listingPrice = obj.price+'';
@@ -207,12 +207,16 @@ var fetchListingsForUserQuery = function(request, response){
 				// extract email building @todo
 				subject = "";
 				text = "";
+				pushBadge = 0;
+				pushObjectId = "";
+				pushUrl = "";
 				
 				if ( savedObjects ){
 					if ( savedObjects.length > 0 ){
 					
 						if ( savedObjects.length > 1 ){
 							subject = savedObjects.length + " New Listings!";
+							pushBadge = savedObjects.length;
 							for ( var k=0; k<savedObjects.length; k++){
 								obj = savedObjects[k];
 								text = text + "$" + obj.get("price") + " <a href='" + obj.get("url") + "'>" + obj.get("title") + "</a>";
@@ -223,9 +227,16 @@ var fetchListingsForUserQuery = function(request, response){
 									text = text + "<br/><img src='"+obj.get('thumbUrl')+"' />";
 								}
 								text = text + "<br/><br/>";
+								
+								// figure out a strategy for multiple listings
+								pushObjectId = obj.id; // ensure this works.
+								pushUrl = obj.get("url");
 							}
 						} else {
 							obj = savedObjects[0];
+							pushBadge = 1;
+							pushObjectId = obj.id;
+							pushUrl = obj.get("url");
 							subject = "New: $" + obj.get("price") + " " + obj.get("title");
 							text = "$" + obj.get("price") + " <a href='" + obj.get("url") + "'>" + obj.get("title") + "</a>";
 							if ( obj.get("sourceUrl") ){
@@ -257,22 +268,53 @@ var fetchListingsForUserQuery = function(request, response){
 									email = userObj.get("email");
 									isEnabled = userObj.get("enabled");
 									if ( email && isEnabled ){
-										console.log('about to send email to -> ' + email);
-										Mailgun.sendEmail({
-											to: email,
-											from: "maillist@mattrestivo.com",
-											subject: subject,
-											html: text
-										}, {
-											success: function(httpResponse) {
-												//console.log(httpResponse);
-												notificationPromise.resolve(savedObjects);
-											},
-											error: function(httpResponse) {
-												//console.error(httpResponse);
-												notificationPromise.reject(httpResponse);
-											}
-										});
+										
+										// @todo - remove this once everyone is onboarded to app
+										if ( user == "FY0LGncI6C" ){
+											console.log('breaking into push for this user');
+											// this is restivo, fork this for push notifications
+											var pushQuery = new Parse.Query(Parse.Installation);
+											pushQuery.equalTo('deviceType', 'ios');
+											pushQuery.equalTo('channels', user);
+    
+											Parse.Push.send({
+												where: pushQuery, // Set our Installation query
+												data: {
+													alert: subject,
+													badge: pushBadge,
+													id: pushObjectId,
+													url: pushUrl
+												}
+											}, {
+												success: function() {
+													// Push was successful
+													notificationPromise.resolve(savedObjects);
+												},
+												error: function(error) {
+													notificationPromise.reject(error);
+													throw "Got an error " + error.code + " : " + error.message;
+												}
+											});
+											
+										} else {
+											console.log('about to send email to -> ' + email);
+											Mailgun.sendEmail({
+												to: email,
+												from: "maillist@mattrestivo.com",
+												subject: subject,
+												html: text
+											}, {
+												success: function(httpResponse) {
+													//console.log(httpResponse);
+													notificationPromise.resolve(savedObjects);
+												},
+												error: function(httpResponse) {
+													//console.error(httpResponse);
+													notificationPromise.reject(httpResponse);
+												}
+											});
+										}
+										
 									} else {
 										notificationPromise.resolve(savedObjects); // move along, no valid email
 									}
