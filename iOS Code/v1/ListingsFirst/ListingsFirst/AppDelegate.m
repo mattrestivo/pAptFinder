@@ -56,13 +56,15 @@
         NSString *objectId = [notificationPayload objectForKey:@"id"]; // convert to use this and build a cool native view
         
         // add a uiwebview to rootviewcontroller and open the url.
-        CGRect webFrame = CGRectMake(0.0, 0.0, self.window.frame.size.width, self.window.frame.size.height);
+        self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:[[UIViewController alloc] init]];
+        
+        CGRect webFrame = CGRectMake(0.0, 0.0, self.window.frame.size.width, self.window.frame.size.height); // @todo - this is wrong, fix it. it should be based on the view in the UIViewController.
         UIWebView *webView = [[UIWebView alloc] initWithFrame:webFrame];
         [webView setBackgroundColor:[UIColor clearColor]];
         NSURL *openUrl = [NSURL URLWithString:url];
         NSURLRequest *requestObj = [NSURLRequest requestWithURL:openUrl];
         [webView loadRequest:requestObj];
-        self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:[[UIViewController alloc] init]];
+        
         [self.window.rootViewController.view addSubview:webView];
         self.window.backgroundColor = [UIColor whiteColor];
         [self.window makeKeyAndVisible];
@@ -91,6 +93,10 @@
 }
 
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
+
+    // if the device is foregrounded, handle an alert view.
+    // this is also called when the app receives push data that's already on the device. aka, the app is backgrounded, then launched with a push notification.
+
     [PFPush handlePush:userInfo];
 }
 
@@ -110,6 +116,14 @@
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+    
+    // clear the badge
+    PFInstallation *currentInstallation = [PFInstallation currentInstallation];
+    if (currentInstallation.badge != 0) {
+        currentInstallation.badge = 0;
+        [currentInstallation saveEventually];
+    }
+    
     [FBSDKAppEvents activateApp];
 }
 
