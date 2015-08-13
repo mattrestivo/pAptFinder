@@ -20,10 +20,8 @@
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    // Override point for customization after application launch.
     
-    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    
+    // Handle device remote notification registration
     UIUserNotificationType userNotificationTypes = (UIUserNotificationTypeAlert |
                                                     UIUserNotificationTypeBadge |
                                                     UIUserNotificationTypeSound);
@@ -32,59 +30,71 @@
     [application registerUserNotificationSettings:settings];
     [application registerForRemoteNotifications];
     
-    // ****************************************************************************
-    // Fill in with your Parse credentials:
-    // ****************************************************************************
+    
+    // *****
+    // inits
+    // *****
+    [Parse enableLocalDatastore];
     [Parse setApplicationId:@"qaxPUYOQKh2qoynbAJpC41UWEU3AHJCLZCI2TJ9t" clientKey:@"j5XuIcLBHXJzGdgWCetzyZNQ8De6Z04tSCoI4lCb"];
-    
-    // ****************************************************************************
-    // Your Facebook application id is configured in Info.plist.
-    // ****************************************************************************
     [PFFacebookUtils initializeFacebookWithApplicationLaunchOptions:launchOptions];
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     
-    // ****************************************************************************
+
+    // add the login view controller to the rootViewController
+    self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:[[PFLogInViewController alloc] init]];
+    self.window.backgroundColor = [UIColor whiteColor];
+    [self.window makeKeyAndVisible];
+    
     // Handle Launch from Notification
-    // ****************************************************************************
     NSDictionary *notificationPayload = launchOptions[UIApplicationLaunchOptionsRemoteNotificationKey];
-    
     if ( notificationPayload ){
         
-        NSLog(@"Found a notification payload");
+        [self handleApplication:application withPush:notificationPayload];
         
-        // for now, let's just open the streeteasy URL in a webview.
-        NSString *url = [notificationPayload objectForKey:@"url"]; // temp for now
-        NSString *objectId = [notificationPayload objectForKey:@"id"]; // convert to use this and build a cool native view
-        
-        // add a uiwebview to rootviewcontroller and open the url.
-        self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:[[UIViewController alloc] init]];
-        
-        CGRect webFrame = CGRectMake(0.0, 0.0, self.window.frame.size.width, self.window.frame.size.height); // @todo - this is wrong, fix it. it should be based on the view in the UIViewController.
-        UIWebView *webView = [[UIWebView alloc] initWithFrame:webFrame];
-        [webView setBackgroundColor:[UIColor clearColor]];
-        NSURL *openUrl = [NSURL URLWithString:url];
-        NSURLRequest *requestObj = [NSURLRequest requestWithURL:openUrl];
-        [webView loadRequest:requestObj];
-        
-        [self.window.rootViewController.view addSubview:webView];
-        self.window.backgroundColor = [UIColor whiteColor];
-        [self.window makeKeyAndVisible];
-        
-    // ****************************************************************************
-    // add the login view controller to the rootViewController
-    // ****************************************************************************
-
-    } else {
-        self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:[[PFLogInViewController alloc] init]];
-        self.window.backgroundColor = [UIColor whiteColor];
-        [self.window makeKeyAndVisible];
     }
-
+    
     
     return YES;
 }
 
+- (void)handleApplication:(UIApplication *)application withPush:(NSDictionary *)pushObject {
+    NSLog(@"Found a notification payload");
+    
+//  ************
+//  Open Webview
+//  ************
+    NSString *url = [pushObject objectForKey:@"url"];
+    //NSString *objectId = [pushObject objectForKey:@"id"]; // convert to use this and build a cool native view
+    
+    NSLog(@"%@",url); // test and make sure this works in background running and background closed.
+    
+    // Add a uiwebview to rootviewcontroller and open the
+    //self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController:[[UIViewController alloc] init]];
+
+/*
+    CGRect webFrame = CGRectMake(0.0, 0.0, self.window.frame.size.width, self.window.frame.size.height); // @todo - this is wrong, fix it. it should be based on the view in the UIViewController.
+    UIWebView *webView = [[UIWebView alloc] initWithFrame:webFrame];
+    [webView setBackgroundColor:[UIColor clearColor]];
+    
+    NSURL *openUrl = [NSURL URLWithString:url];
+    NSURLRequest *requestObj = [NSURLRequest requestWithURL:openUrl];
+    [webView loadRequest:requestObj];
+    
+    // CoverVertical
+    [self.window.rootViewController.view.window.layer addAnimation:transition forKey:kCATransition];
+    [self presentViewController:adjustViewController animated:NO completion:nil];
+    
+    [self.window.rootViewController.view addSubview:webView];
+    self.window.backgroundColor = [UIColor whiteColor];
+    [self.window makeKeyAndVisible];
+*/
+    
+}
+
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
-    NSLog(@"Did register user for remote notifications with token %@",deviceToken);
+
+    NSLog(@"Device did register for remote notifications with token %@",deviceToken);
+    
     // Store the deviceToken in the current installation and save it to Parse.
     PFInstallation *currentInstallation = [PFInstallation currentInstallation];
     [currentInstallation setDeviceTokenFromData:deviceToken];
@@ -93,11 +103,13 @@
 }
 
 - (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo {
-
-    // if the device is foregrounded, handle an alert view.
-    // this is also called when the app receives push data that's already on the device. aka, the app is backgrounded, then launched with a push notification.
-
-    [PFPush handlePush:userInfo];
+    
+    if ( [[UIApplication sharedApplication] applicationState] == UIApplicationStateInactive){
+        [PFPush handlePush:userInfo]; // just display an alert for now.
+    } else if ( userInfo ) {
+        [self handleApplication:application withPush:userInfo];
+    }
+    
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {
