@@ -27,12 +27,6 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
-
-    
-    // create a webview, just in case we're deeplinking.
-    CGRect webFrame = CGRectMake(0.0, 0.0, self.view.frame.size.width, self.view.frame.size.height);
-    UIWebView *webView = [[UIWebView alloc] initWithFrame:webFrame];
-    [webView setBackgroundColor:[UIColor clearColor]];
     
     // retreive current user session from parse.
     NSString *sessionToken = [PFUser currentUser].sessionToken;
@@ -52,7 +46,13 @@
         //NSLog(@"%@", objects);
         self.listings = objects;
         
-        mainTableView = [[UITableView alloc] initWithFrame:self.view.bounds style:UITableViewStylePlain];
+        CGFloat x = 0;
+        CGFloat y = 64;
+        CGFloat width = self.view.frame.size.width;
+        CGFloat height = self.view.frame.size.height - 50;
+        CGRect tableFrame = CGRectMake(x, y, width, height);
+        
+        mainTableView = [[UITableView alloc] initWithFrame:tableFrame style:UITableViewStylePlain];
         mainTableView.delegate = self;
         mainTableView.dataSource = self;
         //mainTableView.backgroundColor = [UIColor cyanColor];
@@ -75,13 +75,27 @@
 //    [self.view addSubview:newTableViewController];
     
     // now pop a webview into the view
-    if ( false ){
-        NSString *urlAddress = [NSString stringWithFormat: @"http://mattrestivo.com/tml/select.php?user_session=%@",sessionToken];
-        NSURL *url = [NSURL URLWithString:urlAddress];
-        NSURLRequest *requestObj = [NSURLRequest requestWithURL:url];
-        [webView loadRequest:requestObj];
-        [self.view addSubview:webView];
-    }
+    UIBarButtonItem *anotherButton = [[UIBarButtonItem alloc] initWithTitle:@"Settings" style:UIBarButtonItemStylePlain target:self action:@selector(_userInquirySettings:)];
+    self.navigationItem.rightBarButtonItem = anotherButton;
+    
+}
+
+- (IBAction)_userInquirySettings:(id)sender {
+    // create a webview, just in case we're deeplinking.
+    CGRect webFrame = CGRectMake(0.0, 0.0, self.view.frame.size.width, self.view.frame.size.height);
+    UIWebView *webView = [[UIWebView alloc] initWithFrame:webFrame];
+    [webView setBackgroundColor:[UIColor clearColor]];
+    
+    NSString *sessionToken = [PFUser currentUser].sessionToken;
+    NSString *urlAddress = [NSString stringWithFormat: @"http://mattrestivo.com/tml/select.php?user_session=%@",sessionToken];
+    NSURL *url = [NSURL URLWithString:urlAddress];
+    NSURLRequest *requestObj = [NSURLRequest requestWithURL:url];
+    [webView loadRequest:requestObj];
+    [webView setBackgroundColor:[UIColor whiteColor]];
+    
+    UIViewController *detailViewController = [[UIViewController alloc] init];
+    [detailViewController.view addSubview:webView];
+    [self.navigationController pushViewController:detailViewController animated:YES];
     
 }
 
@@ -174,26 +188,17 @@
      NSString *newAboutText = [aboutText stringByReplacingOccurrencesOfString:@"\\n" withString:newlineString];*/
     //CGSize aboutSize = [newAboutText sizeWithFont:font constrainedToSize:CGSizeMake(268, 4000)];
     
-    return 265;
+    return 230;
 }
 
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    /*
-    static NSString *cellIdentifier = @"Card";
-    Card *cell = (Card *)[tableView dequeueReusableCellWithIdentifier:cellIdentifier];
-    if (cell == nil) {
-        cell = [[Card alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
-    }
-    // Just want to test, so I hardcode the data
-    cell.title.text = [self.listings objectAtIndex:indexPath.row][@"title"];
-    
-    */
-    
+
     static NSString *cellIdentifier = @"LCard";
     LCard *cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier];
     if (cell == nil) {
-        cell = [[LCard alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
+        NSArray *nib = [[NSBundle mainBundle] loadNibNamed:cellIdentifier owner:self options:nil];
+        cell = (LCard *)[nib objectAtIndex:0];
     }
     
     [cell setupWithDictionary:[self.listings objectAtIndex:indexPath.row]];
@@ -206,6 +211,51 @@
     // Get the new view controller using [segue destinationViewController].
     // Pass the selected object to the new view controller.
 }
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+
+    
+    NSString *url = [self.listings objectAtIndex:indexPath.row][@"url"];
+    /*
+    UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Open URL"
+                                                                   message:url
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction* defaultAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault
+                                                          handler:^(UIAlertAction * action) {}];
+    [alert addAction:defaultAction];
+    [self presentViewController:alert animated:YES completion:nil];
+    */
+     
+    UIViewController *detailViewController = [[UIViewController alloc] init];
+    CGRect webFrame = CGRectMake(0.0, 0.0, self.view.frame.size.width, self.view.frame.size.height); // @todo - this is wrong, fix it. it should be based on the view in the UIViewController.
+    UIWebView *webView = [[UIWebView alloc] initWithFrame:webFrame];
+    NSURL *openUrl = [NSURL URLWithString:url];
+    NSURLRequest *requestObj = [NSURLRequest requestWithURL:openUrl];
+    
+    [self.navigationController pushViewController:detailViewController animated:YES];
+    [webView loadRequest:requestObj];
+    [webView setBackgroundColor:[UIColor whiteColor]];
+    [detailViewController.view addSubview:webView];
+    
+    
+    // CoverVertical
+    /*[self.window.rootViewController.view.window.layer addAnimation:transition forKey:kCATransition];
+    [self presentViewController:adjustViewController animated:NO completion:nil];
+    
+    [self.window.rootViewController.view addSubview:webView];
+    self.window.backgroundColor = [UIColor whiteColor];
+
+    
+    Navigation logic may go here. Create and push another view controller.
+    
+    <#DetailViewController#> *detailViewController = [[<#DetailViewController#> alloc] init];
+     // Pass the selected object to the new view controller.
+     [self.navigationController pushViewController:detailViewController animated:YES];
+    */
+    
+}
+
 
 
 

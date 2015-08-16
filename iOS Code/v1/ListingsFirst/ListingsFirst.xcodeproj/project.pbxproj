@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		C90741871B7D0EFE00815D51 /* Card.m in Sources */ = {isa = PBXBuildFile; fileRef = C90741861B7D0EFE00815D51 /* Card.m */; };
+		C90741891B7D1AA200815D51 /* brianB.png in Resources */ = {isa = PBXBuildFile; fileRef = C90741881B7D1AA200815D51 /* brianB.png */; };
 		C94634E31B6182B00004F99C /* Bolts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C94634DD1B6182B00004F99C /* Bolts.framework */; };
 		C94634E41B6182B00004F99C /* Parse.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C94634DE1B6182B00004F99C /* Parse.framework */; };
 		C94634E51B6182B00004F99C /* ParseCrashReporting.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C94634DF1B6182B00004F99C /* ParseCrashReporting.framework */; };
@@ -58,6 +59,7 @@
 /* Begin PBXFileReference section */
 		C90741851B7D0EFE00815D51 /* Card.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Card.h; sourceTree = "<group>"; };
 		C90741861B7D0EFE00815D51 /* Card.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Card.m; sourceTree = "<group>"; };
+		C90741881B7D1AA200815D51 /* brianB.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = brianB.png; path = "../../../../../../../Downloads/CardTilt-starter/CardTilt/brianB.png"; sourceTree = "<group>"; };
 		C94634DD1B6182B00004F99C /* Bolts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Bolts.framework; path = "../../../../../parse-library-1.7.5/Bolts.framework"; sourceTree = "<group>"; };
 		C94634DE1B6182B00004F99C /* Parse.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Parse.framework; path = "../../../../../parse-library-1.7.5/Parse.framework"; sourceTree = "<group>"; };
 		C94634DF1B6182B00004F99C /* ParseCrashReporting.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ParseCrashReporting.framework; path = "../../../../../parse-library-1.7.5/ParseCrashReporting.framework"; sourceTree = "<group>"; };
@@ -192,6 +194,7 @@
 			isa = PBXGroup;
 			children = (
 				C94635101B61E5F30004F99C /* Listings_First_APNs_Development_Profile.mobileprovision */,
+				C90741881B7D1AA200815D51 /* brianB.png */,
 				C950C5951B6177C1008CFAC7 /* Info.plist */,
 				C94634EE1B61879B0004F99C /* login-w-fb.png */,
 				C950C5961B6177C1008CFAC7 /* main.m */,
@@ -328,6 +331,7 @@
 				C94634ED1B61859F0004F99C /* PFLogInViewController.xib in Resources */,
 				C950C5A31B6177C1008CFAC7 /* Main.storyboard in Resources */,
 				C950C5A81B6177C1008CFAC7 /* LaunchScreen.xib in Resources */,
+				C90741891B7D1AA200815D51 /* brianB.png in Resources */,
 				C94634F61B618B3C0004F99C /* FacebookSDKStrings.bundle in Resources */,
 				C9FB4B8E1B6991D100DB900C /* ListingsTableView.xib in Resources */,
 				C950C5A51B6177C1008CFAC7 /* Images.xcassets in Resources */,
