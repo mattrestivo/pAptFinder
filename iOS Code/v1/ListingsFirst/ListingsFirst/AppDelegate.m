@@ -124,6 +124,8 @@
 
 - (void)applicationWillEnterForeground:(UIApplication *)application {
     // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
+    NSLog(@"%@",@"Good idea to refresh the tableView here");
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"ReloadAppDelegateTable" object:nil];
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {

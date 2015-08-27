@@ -7,14 +7,14 @@
 	<key>IDESourceControlProjectIdentifier</key>
 	<string>94C76398-392A-47FF-9606-87AE4104B672</string>
 	<key>IDESourceControlProjectName</key>
-	<string>project</string>
+	<string>ListingsFirst</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
 		<key>2295751FC66C1E478128D39D2166289B7612B844</key>
 		<string>github.com:mattrestivo/pAptFinder.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>iOS Code/v1/ListingsFirst/ListingsFirst.xcodeproj/project.xcworkspace</string>
+	<string>iOS Code/v1/ListingsFirst/ListingsFirst.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>2295751FC66C1E478128D39D2166289B7612B844</key>

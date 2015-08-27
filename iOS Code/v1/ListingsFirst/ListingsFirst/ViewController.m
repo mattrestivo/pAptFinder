@@ -9,10 +9,10 @@
 #import "ViewController.h"
 #import "ListingsTableView.h"
 #import "LCard.h"
-//#import "Card.h"
 #import <Parse/Parse.h>
 #import <ParseFacebookUtilsV4/PFFacebookUtils.h>
 #import <FBSDKCoreKit/FBSDKCoreKit.h>
+#import "UIImageView+WebCache.h"
 
 @interface ViewController ()
 
@@ -28,6 +28,14 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
+    /*if ([self respondsToSelector:@selector(edgesForExtendedLayout)]){
+        self.edgesForExtendedLayout = UIRectEdgeNone;
+        self.extendedLayoutIncludesOpaqueBars=NO;
+        self.automaticallyAdjustsScrollViewInsets=NO;
+    }*/
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reloadTableViewData) name:@"ReloadAppDelegateTable" object:nil];
+    
     // retreive current user session from parse.
     NSString *sessionToken = [PFUser currentUser].sessionToken;
     NSLog(@"User Session Token: %@",sessionToken);
@@ -42,20 +50,20 @@
     // now what we actually want to do is retreive the user's listings
     PFQuery *userInquiryListingsQuery = [PFQuery queryWithClassName:@"UserInquiryListing"];
     [userInquiryListingsQuery whereKey:@"userId" equalTo:[PFUser currentUser].objectId];
+    [userInquiryListingsQuery orderByDescending:@"created"];
     [userInquiryListingsQuery findObjectsInBackgroundWithBlock:^(NSArray *objects, NSError *error) {
         //NSLog(@"%@", objects);
         self.listings = objects;
         
         CGFloat x = 0;
-        CGFloat y = 64;
+        CGFloat y = 0;
         CGFloat width = self.view.frame.size.width;
-        CGFloat height = self.view.frame.size.height - 50;
+        CGFloat height = self.view.frame.size.height;
         CGRect tableFrame = CGRectMake(x, y, width, height);
         
         mainTableView = [[UITableView alloc] initWithFrame:tableFrame style:UITableViewStylePlain];
         mainTableView.delegate = self;
         mainTableView.dataSource = self;
-        //mainTableView.backgroundColor = [UIColor cyanColor];
         [self.view addSubview:mainTableView];
         
     }];
@@ -78,6 +86,15 @@
     UIBarButtonItem *anotherButton = [[UIBarButtonItem alloc] initWithTitle:@"Settings" style:UIBarButtonItemStylePlain target:self action:@selector(_userInquirySettings:)];
     self.navigationItem.rightBarButtonItem = anotherButton;
     
+}
+
+-(void)viewDidLayoutSubviews{
+    [super viewDidLayoutSubviews];
+    self.navigationController.navigationBar.translucent = NO;
+}
+
+- (void)reloadTableViewData{
+    [mainTableView reloadData];
 }
 
 - (IBAction)_userInquirySettings:(id)sender {
@@ -188,7 +205,7 @@
      NSString *newAboutText = [aboutText stringByReplacingOccurrencesOfString:@"\\n" withString:newlineString];*/
     //CGSize aboutSize = [newAboutText sizeWithFont:font constrainedToSize:CGSizeMake(268, 4000)];
     
-    return 230;
+    return 245;
 }
 
 
@@ -200,7 +217,7 @@
         NSArray *nib = [[NSBundle mainBundle] loadNibNamed:cellIdentifier owner:self options:nil];
         cell = (LCard *)[nib objectAtIndex:0];
     }
-    
+
     [cell setupWithDictionary:[self.listings objectAtIndex:indexPath.row]];
     
     return cell;
@@ -236,28 +253,34 @@
     [self.navigationController pushViewController:detailViewController animated:YES];
     [webView loadRequest:requestObj];
     [webView setBackgroundColor:[UIColor whiteColor]];
+    
+    UIBarButtonItem *anotherButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemReply target:self action:@selector(_showActionSheet:)];
+    detailViewController.navigationItem.rightBarButtonItem = anotherButton;
+    
     [detailViewController.view addSubview:webView];
-    
-    
-    // CoverVertical
-    /*[self.window.rootViewController.view.window.layer addAnimation:transition forKey:kCATransition];
-    [self presentViewController:adjustViewController animated:NO completion:nil];
-    
-    [self.window.rootViewController.view addSubview:webView];
-    self.window.backgroundColor = [UIColor whiteColor];
-
-    
-    Navigation logic may go here. Create and push another view controller.
-    
-    <#DetailViewController#> *detailViewController = [[<#DetailViewController#> alloc] init];
-     // Pass the selected object to the new view controller.
-     [self.navigationController pushViewController:detailViewController animated:YES];
-    */
     
 }
 
+- (IBAction)_showActionSheet:(id)sender {
+    // create a webview, just in case we're deeplinking.
+    UIActionSheet *actionSheet = [[UIActionSheet alloc] initWithTitle:nil
+                                                             delegate:self
+                                                    cancelButtonTitle:@"Cancel"
+                                               destructiveButtonTitle:@"Delete it"
+                                                    otherButtonTitles:@"Share Listing", @"Open in Maps", nil];
+    
+    [actionSheet showInView:self.view];
 
+}
 
-
+- (IBAction)showDeleteConfirmation:(id)sender {
+    UIActionSheet *actionSheet = [[UIActionSheet alloc] initWithTitle:@"Really delete the selected contact?"
+                                                             delegate:self
+                                                    cancelButtonTitle:@"No, I changed my mind"
+                                               destructiveButtonTitle:@"Yes, delete it"
+                                                    otherButtonTitles:nil];
+    
+    [actionSheet showInView:self.view];
+}
 
 @end

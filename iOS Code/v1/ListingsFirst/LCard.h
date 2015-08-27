@@ -18,6 +18,10 @@
 @property (weak, nonatomic) IBOutlet UILabel *postedTime;
 @property (weak, nonatomic) IBOutlet UILabel *webLabel;
 @property (weak, nonatomic) IBOutlet UIButton *webButton;
+@property (weak, nonatomic) NSDictionary *listingDictionary;
+
+- (IBAction)sharingButton:(id)sender;
+- (IBAction)mapsButton:(id)sender;
 
 - (void)setupWithDictionary:(NSDictionary *)dictionary;
 
