@@ -109,22 +109,6 @@
     
 }
 
-- (IBAction)mapsButton:(id)sender {
-    
-    NSLog(@"%@",@"Open Maps");
- 
- if ([[UIApplication sharedApplication] canOpenURL:
- [NSURL URLWithString:@"comgooglemaps://"]]) {
- [[UIApplication sharedApplication] openURL:
- [NSURL URLWithString:@"comgooglemaps://?center=40.765819,-73.975866&zoom=14&views=traffic"]];
- } else {
- NSLog(@"Can't use comgooglemaps://");
- }
- 
-
-
-}
-
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated {
     [super setSelected:selected animated:animated];
 

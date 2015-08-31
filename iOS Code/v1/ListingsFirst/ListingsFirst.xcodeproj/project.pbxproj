@@ -56,6 +56,7 @@
 		C9BDEF8B1B8F614F004CA0B2 /* UIImageView+WebCache.m in Sources */ = {isa = PBXBuildFile; fileRef = C9BDEF7A1B8F614F004CA0B2 /* UIImageView+WebCache.m */; };
 		C9BDEF8C1B8F614F004CA0B2 /* UIView+WebCacheOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = C9BDEF7C1B8F614F004CA0B2 /* UIView+WebCacheOperation.m */; };
 		C9BDEF8E1B8FA8EE004CA0B2 /* placeholder.png in Resources */ = {isa = PBXBuildFile; fileRef = C9BDEF8D1B8FA8EE004CA0B2 /* placeholder.png */; };
+		C9BDEF901B8FC999004CA0B2 /* icon.png in Resources */ = {isa = PBXBuildFile; fileRef = C9BDEF8F1B8FC999004CA0B2 /* icon.png */; };
 		C9FB4B921B71533B00DB900C /* LCard.m in Sources */ = {isa = PBXBuildFile; fileRef = C9FB4B901B71533B00DB900C /* LCard.m */; };
 		C9FB4B931B71533B00DB900C /* LCard.xib in Resources */ = {isa = PBXBuildFile; fileRef = C9FB4B911B71533B00DB900C /* LCard.xib */; };
 /* End PBXBuildFile section */
@@ -145,6 +146,7 @@
 		C9BDEF7B1B8F614F004CA0B2 /* UIView+WebCacheOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+WebCacheOperation.h"; sourceTree = "<group>"; };
 		C9BDEF7C1B8F614F004CA0B2 /* UIView+WebCacheOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+WebCacheOperation.m"; sourceTree = "<group>"; };
 		C9BDEF8D1B8FA8EE004CA0B2 /* placeholder.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = placeholder.png; sourceTree = "<group>"; };
+		C9BDEF8F1B8FC999004CA0B2 /* icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.png; sourceTree = "<group>"; };
 		C9FB4B8F1B71533B00DB900C /* LCard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LCard.h; path = ../LCard.h; sourceTree = "<group>"; };
 		C9FB4B901B71533B00DB900C /* LCard.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LCard.m; path = ../LCard.m; sourceTree = "<group>"; };
 		C9FB4B911B71533B00DB900C /* LCard.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = LCard.xib; path = ../LCard.xib; sourceTree = "<group>"; };
@@ -232,6 +234,7 @@
 		C950C5941B6177C1008CFAC7 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				C9BDEF8F1B8FC999004CA0B2 /* icon.png */,
 				C9BDEF8D1B8FA8EE004CA0B2 /* placeholder.png */,
 				C94635101B61E5F30004F99C /* Listings_First_APNs_Development_Profile.mobileprovision */,
 				C90741881B7D1AA200815D51 /* brianB.png */,
@@ -414,6 +417,7 @@
 				C950C5A81B6177C1008CFAC7 /* LaunchScreen.xib in Resources */,
 				C9BDEF8E1B8FA8EE004CA0B2 /* placeholder.png in Resources */,
 				C90741891B7D1AA200815D51 /* brianB.png in Resources */,
+				C9BDEF901B8FC999004CA0B2 /* icon.png in Resources */,
 				C94634F61B618B3C0004F99C /* FacebookSDKStrings.bundle in Resources */,
 				C950C5A51B6177C1008CFAC7 /* Images.xcassets in Resources */,
 				C94634EF1B61879B0004F99C /* login-w-fb.png in Resources */,

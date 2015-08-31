@@ -12,11 +12,15 @@
 #import <Parse/Parse.h>
 #import <ParseFacebookUtilsV4/PFFacebookUtils.h>
 #import <FBSDKCoreKit/FBSDKCoreKit.h>
+#import <QuartzCore/QuartzCore.h>
 #import "UIImageView+WebCache.h"
 
 @interface ViewController ()
 
 @property (strong, nonatomic) NSArray *listings;
+@property (assign, nonatomic) CATransform3D initialTransformation;
+@property (nonatomic, strong) NSMutableSet *shownIndexes;
+
 
 @end
 
@@ -75,6 +79,15 @@
         NSLog(@"%@",self.listings);
     }
     
+    CGFloat rotationAngleDegrees = -15;
+    CGFloat rotationAngleRadians = rotationAngleDegrees * (M_PI/180);
+    CGPoint offsetPositioning = CGPointMake(-20, -20);
+    
+    CATransform3D transform = CATransform3DIdentity;
+    transform = CATransform3DRotate(transform, rotationAngleRadians, 0.0, 0.0, 1.0);
+    transform = CATransform3DTranslate(transform, offsetPositioning.x, offsetPositioning.y, 0.0);
+    _initialTransformation = transform;
+    _shownIndexes = [NSMutableSet set];
     
     // if they don't have listings, let's tell them they don't have them and show them a button to go to the edit webview.
 //    [self.view addSubview:listingsView];
@@ -234,15 +247,7 @@
 
     
     NSString *url = [self.listings objectAtIndex:indexPath.row][@"url"];
-    /*
-    UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Open URL"
-                                                                   message:url
-                                                            preferredStyle:UIAlertControllerStyleAlert];
-    UIAlertAction* defaultAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault
-                                                          handler:^(UIAlertAction * action) {}];
-    [alert addAction:defaultAction];
-    [self presentViewController:alert animated:YES completion:nil];
-    */
+    NSString *title = [self.listings objectAtIndex:indexPath.row][@"url"];
      
     UIViewController *detailViewController = [[UIViewController alloc] init];
     CGRect webFrame = CGRectMake(0.0, 0.0, self.view.frame.size.width, self.view.frame.size.height); // @todo - this is wrong, fix it. it should be based on the view in the UIViewController.
@@ -266,21 +271,81 @@
     UIActionSheet *actionSheet = [[UIActionSheet alloc] initWithTitle:nil
                                                              delegate:self
                                                     cancelButtonTitle:@"Cancel"
-                                               destructiveButtonTitle:@"Delete it"
-                                                    otherButtonTitles:@"Share Listing", @"Open in Maps", nil];
-    
+                                               destructiveButtonTitle:@"Delete"
+                                                    otherButtonTitles:@"Share", @"Google Maps", nil];
+    actionSheet.tag = 1;
+    actionSheet.accessibilityValue = @"-";
     [actionSheet showInView:self.view];
 
 }
 
 - (IBAction)showDeleteConfirmation:(id)sender {
-    UIActionSheet *actionSheet = [[UIActionSheet alloc] initWithTitle:@"Really delete the selected contact?"
-                                                             delegate:self
-                                                    cancelButtonTitle:@"No, I changed my mind"
-                                               destructiveButtonTitle:@"Yes, delete it"
-                                                    otherButtonTitles:nil];
     
-    [actionSheet showInView:self.view];
 }
 
+-(void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex{
+    
+    if (actionSheet.tag == 1) {
+        if ( buttonIndex == 0) {
+            
+            // delete!
+/*            NSIndexPath *indexPath = [mainTableView indexPathForCell:(UITableViewCell *)];
+            NSLog(@"current row -> %d",indexPath.row);
+*/
+            
+/*          
+            NSIndexPath *indexPath = [rootViewControler .mainTableView indexPathForCell:(UITableViewCell *)];
+            NSObject *listingObject = [self.listings objectAtIndex:indexPath.row];
+            NSLog(@"%@",listingObject);
+            
+            UIActionSheet *secondActionSheet = [[UIActionSheet alloc] initWithTitle:@"Do you really want to delete this listing?"
+                                                                     delegate:self
+                                                            cancelButtonTitle:@"No, I changed my mind"
+                                                       destructiveButtonTitle:@"Yes"
+                                                            otherButtonTitles:nil];
+
+            [secondActionSheet showInView:self.view];
+*/
+            
+        } else if ( buttonIndex == 1 ){
+            // do share stuff again here.
+            
+        } else if ( buttonIndex == 2 ){
+
+            NSLog(@"%@",@"Open Maps");
+            
+            if ([[UIApplication sharedApplication] canOpenURL:
+                 [NSURL URLWithString:@"comgooglemaps://"]]) {
+                [[UIApplication sharedApplication] openURL:
+                 [NSURL URLWithString:@"comgooglemaps://?center=40.765819,-73.975866&zoom=14&views=traffic"]];
+            } else {
+                NSLog(@"Can't use comgooglemaps://");
+            }
+
+        }
+    }
+    else if (actionSheet.tag == 2){
+        // run your parse delete stuff here.
+    }
+    
+    NSLog(self);
+    NSLog(@"Index = %d - Title = %@", buttonIndex, [actionSheet buttonTitleAtIndex:buttonIndex]);
+}
+
+- (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (![self.shownIndexes containsObject:indexPath]) {
+        [self.shownIndexes addObject:indexPath];
+        
+        UIView *card = [(LCard* )cell mainView];
+        
+        card.layer.transform = self.initialTransformation;
+        card.layer.opacity = 0.5;
+        
+        [UIView animateWithDuration:0.9 animations:^{
+            card.layer.transform = CATransform3DIdentity;
+            card.layer.opacity = 1;
+        }];
+    }
+}
 @end
