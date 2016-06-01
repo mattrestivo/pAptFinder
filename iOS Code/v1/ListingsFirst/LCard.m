@@ -32,7 +32,7 @@
     
     self.listingDictionary = dictionary;
     
-    NSLog(@"%@",dictionary);
+    //NSLog(@"%@",dictionary);
     
     self.mainView.layer.cornerRadius = 10;
     self.mainView.layer.masksToBounds = YES;

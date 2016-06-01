@@ -38,15 +38,18 @@
         self.automaticallyAdjustsScrollViewInsets=NO;
     }*/
     
+    self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@" " style:UIBarButtonItemStylePlain target:nil action:nil];
+    
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reloadTableViewData) name:@"ReloadAppDelegateTable" object:nil];
     
     // retreive current user session from parse.
     NSString *sessionToken = [PFUser currentUser].sessionToken;
-    NSLog(@"User Session Token: %@",sessionToken);
+    //NSLog(@"User Session Token: %@",sessionToken);
     
     // ensure that we map the user's installation to their PFUser ObjectID as a channel for sending push notifications.
     PFInstallation *currentInstallation = [PFInstallation currentInstallation];
-    [currentInstallation addUniqueObject:[PFUser currentUser].objectId forKey:@"channels"];
+    NSLog(@"this-> %@",[@"a_" stringByAppendingString:[PFUser currentUser].objectId]);
+    [currentInstallation addUniqueObject:[@"a_" stringByAppendingString:[PFUser currentUser].objectId] forKey:@"channels"];
     [currentInstallation saveInBackground];
     
     // put entire view into loading state here?

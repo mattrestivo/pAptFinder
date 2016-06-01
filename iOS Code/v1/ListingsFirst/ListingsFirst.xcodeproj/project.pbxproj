@@ -85,7 +85,6 @@
 		C94635081B6190710004F99C /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		C946350A1B6190790004F99C /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		C946350E1B61908F0004F99C /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
-		C94635101B61E5F30004F99C /* Listings_First_APNs_Development_Profile.mobileprovision */ = {isa = PBXFileReference; lastKnownFileType = file; name = Listings_First_APNs_Development_Profile.mobileprovision; path = ../../../../../../../Downloads/Listings_First_APNs_Development_Profile.mobileprovision; sourceTree = "<group>"; };
 		C950C5911B6177C1008CFAC7 /* ListingsFirst.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ListingsFirst.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C950C5951B6177C1008CFAC7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C950C5961B6177C1008CFAC7 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -232,7 +231,6 @@
 			children = (
 				C9BDEF8F1B8FC999004CA0B2 /* icon.png */,
 				C9BDEF8D1B8FA8EE004CA0B2 /* placeholder.png */,
-				C94635101B61E5F30004F99C /* Listings_First_APNs_Development_Profile.mobileprovision */,
 				C90741881B7D1AA200815D51 /* brianB.png */,
 				C950C5951B6177C1008CFAC7 /* Info.plist */,
 				C94634EE1B61879B0004F99C /* login-w-fb.png */,
